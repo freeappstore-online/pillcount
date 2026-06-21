@@ -23,7 +23,9 @@ function save(data: PillData) {
 }
 
 function toLocalDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  // For YYYY-MM-DD dates, parse as local (not UTC) by appending T00:00:00
+  const d = iso.length === 10 ? new Date(iso + 'T00:00:00') : new Date(iso)
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
 function toLocalTime(iso: string): string {
@@ -36,14 +38,25 @@ function daysBetween(start: string, end: string): number {
   return Math.floor((e.getTime() - s.getTime()) / 86400000) + 1
 }
 
+/** Returns today's date as YYYY-MM-DD in local timezone. */
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Returns the local YYYY-MM-DD portion of an ISO datetime string. */
+function localDateOf(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function App() {
   const [data, setData] = useState<PillData | null>(load)
 
-  useEffect(() => { if (data) save(data) }, [data])
+  useEffect(() => {
+    if (data) save(data)
+    else localStorage.removeItem(STORAGE_KEY)
+  }, [data])
 
   const takePill = useCallback(() => {
     const now = new Date().toISOString()
@@ -72,7 +85,7 @@ export default function App() {
   const total = data?.timestamps.length ?? 0
   const today = todayISO()
   const dayNumber = data ? daysBetween(data.startDate, today) : 0
-  const todayPills = data?.timestamps.filter(t => t.startsWith(today)) ?? []
+  const todayPills = data?.timestamps.filter(t => localDateOf(t) === today) ?? []
 
   return (
     <Shell app={fas} appName="Pill Count">
@@ -139,12 +152,12 @@ export default function App() {
             >
               {todayPills.map((t, i) => (
                 <div
-                  key={t}
+                  key={t + '-' + i}
                   className="flex items-center justify-between px-4 py-2.5"
                   style={{ borderBottom: i < todayPills.length - 1 ? '1px solid var(--line)' : 'none' }}
                 >
                   <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-                    Pill #{data!.timestamps.indexOf(t) + 1}
+                    Pill #{total - todayPills.length + i + 1}
                   </span>
                   <span className="text-sm" style={{ color: 'var(--muted)' }}>
                     {toLocalTime(t)}
