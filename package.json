@@ -1,10 +1,19 @@
 {
   "name": "pillcount",
   "private": true,
-  "packageManager": "pnpm@9.15.4",
-  "engines": { "node": ">=22" },
-  "pnpm": { "onlyBuiltDependencies": ["esbuild"] },
-  "repository": { "type": "git", "url": "git+https://github.com/freeappstore-online/pillcount.git" },
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/freeappstore-online/pillcount.git"
+  },
   "scripts": {
     "dev": "pnpm --filter @pillcount/web dev",
     "build": "pnpm --filter @pillcount/web build",
